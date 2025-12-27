@@ -8,4 +8,4 @@ __pycache__/
 *.cprof
 *.cfg
 .*env/
-
+.vscode/
