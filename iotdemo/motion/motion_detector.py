@@ -1,6 +1,7 @@
 """
 Simple motion detection algorithm
 """
+
 from logging import getLogger
 from time import time
 
@@ -8,13 +9,14 @@ import cv2
 import numpy as np
 from iotdemo.common.preset import load_preset, save_preset
 
-__all__ = ('MotionDetector', )
+__all__ = ("MotionDetector",)
 
 
 class MotionDetector:
     """
     Simple motion detect class to extract best shot
     """
+
     EMPTY_POINT = (0, 0)
     EMPTY_BOX = (EMPTY_POINT, EMPTY_POINT)
     EMPTY_AREA = np.s_[0:0, 0:0]
@@ -23,14 +25,14 @@ class MotionDetector:
     DEFAULT_FLIPPED = False
     DEFAULT_TOP_MARGIN = 10
     DEFAULT_THRESHOLD = 127
-    DEFAULT_TOP_RATIO = .6
-    DEFAULT_MID_RATIO = .4
-    DEFAULT_SKIP_TIME = .099  # less then 99ms (3 frame - 30 fps)
+    DEFAULT_TOP_RATIO = 0.6
+    DEFAULT_MID_RATIO = 0.4
+    DEFAULT_SKIP_TIME = 0.099  # less then 99ms (3 frame - 30 fps)
 
     def __init__(self, *, debug=False):
         self.debug = debug
         if self.debug:
-            self.logger = getLogger('MOTION')
+            self.logger = getLogger("MOTION")
 
         self.inverted = MotionDetector.DEFAULT_INVERTED
         self.flipped = MotionDetector.DEFAULT_FLIPPED
@@ -60,26 +62,24 @@ class MotionDetector:
     @property
     def preset(self):
         return {
-            'inverted': self.inverted,
-            'flipped': self.flipped,
-            'top_margin': self.top_margin,
-            'threshold': self.threshold,
-            'top_ratio': self.top_ratio,
-            'mid_ratio': self.mid_ratio,
-            'skip_time': self.skip_time,
-            'roi_top_left': self.roi_box[0],
-            'roi_bottom_right': self.roi_box[1],
-            'crop_top_left': self.crop_box[0],
-            'crop_bottom_right': self.crop_box[1],
+            "inverted": self.inverted,
+            "flipped": self.flipped,
+            "top_margin": self.top_margin,
+            "threshold": self.threshold,
+            "top_ratio": self.top_ratio,
+            "mid_ratio": self.mid_ratio,
+            "skip_time": self.skip_time,
+            "roi_top_left": self.roi_box[0],
+            "roi_bottom_right": self.roi_box[1],
+            "crop_top_left": self.crop_box[0],
+            "crop_bottom_right": self.crop_box[1],
         }
 
-    def load_preset(self,
-                    path: str = 'motion.cfg',
-                    key: str = 'default',
-                    *,
-                    default: bool = False):
+    def load_preset(
+        self, path: str = "motion.cfg", key: str = "default", *, default: bool = False
+    ):
         if self.debug:
-            self.logger.info('load preset from %s / %s', path, key)
+            self.logger.info("load preset from %s / %s", path, key)
 
         if default:
             data = {}
@@ -88,32 +88,27 @@ class MotionDetector:
             if data is None:
                 return
 
-        self.flipped = data.get('flipped', MotionDetector.DEFAULT_FLIPPED)
-        self.inverted = data.get('inverted', MotionDetector.DEFAULT_INVERTED)
+        self.flipped = data.get("flipped", MotionDetector.DEFAULT_FLIPPED)
+        self.inverted = data.get("inverted", MotionDetector.DEFAULT_INVERTED)
 
-        self.top_margin = data.get('top_margin',
-                                   MotionDetector.DEFAULT_TOP_MARGIN)
-        self.threshold = data.get('threshold',
-                                  MotionDetector.DEFAULT_THRESHOLD)
+        self.top_margin = data.get("top_margin", MotionDetector.DEFAULT_TOP_MARGIN)
+        self.threshold = data.get("threshold", MotionDetector.DEFAULT_THRESHOLD)
 
-        self.top_ratio = data.get('top_ratio',
-                                  MotionDetector.DEFAULT_TOP_RATIO)
-        self.mid_ratio = data.get('mid_ratio',
-                                  MotionDetector.DEFAULT_MID_RATIO)
+        self.top_ratio = data.get("top_ratio", MotionDetector.DEFAULT_TOP_RATIO)
+        self.mid_ratio = data.get("mid_ratio", MotionDetector.DEFAULT_MID_RATIO)
 
-        self.skip_time = data.get('skip_time',
-                                  MotionDetector.DEFAULT_SKIP_TIME)
+        self.skip_time = data.get("skip_time", MotionDetector.DEFAULT_SKIP_TIME)
 
-        roi_top_left = data.get('roi_top_left', (12, 0))
-        roi_bottom_right = data.get('roi_bottom_right', (212, 90))
+        roi_top_left = data.get("roi_top_left", (12, 0))
+        roi_bottom_right = data.get("roi_bottom_right", (212, 90))
         self.set_roi_box(roi_top_left, roi_bottom_right)
 
-        crop_top_left = data.get('crop_top_left', (0, 10))
-        crop_bottom_right = data.get('crop_bottom_right', (224, 234))
+        crop_top_left = data.get("crop_top_left", (0, 10))
+        crop_bottom_right = data.get("crop_bottom_right", (224, 234))
         self.set_crop_box(crop_top_left, crop_bottom_right)
         self.changed = False
 
-    def save_preset(self, path: str, key: str = 'default'):
+    def save_preset(self, path: str, key: str = "default"):
         save_preset(path, self.preset, key)
         self.changed = False
 
@@ -196,14 +191,18 @@ class MotionDetector:
 
     def measure(self, binary):
         # Top Area
-        target_pixels = cv2.countNonZero(binary[:self.top_margin, :])
+        target_pixels = cv2.countNonZero(binary[: self.top_margin, :])
         if self.inverted:
             target_pixels = self.total_top_pixels - target_pixels
 
         delta_top = target_pixels / self.total_top_pixels
         if self.debug:
-            self.logger.info('TOP AREA ratio: %f %s (%f)', delta_top,
-                             '>' if self.flipped else '<', self.top_ratio)
+            self.logger.info(
+                "TOP AREA ratio: %f %s (%f)",
+                delta_top,
+                ">" if self.flipped else "<",
+                self.top_ratio,
+            )
 
         if self.flipped:
             if delta_top < self.top_ratio:
@@ -213,14 +212,18 @@ class MotionDetector:
                 return False
 
         # Mid Area
-        target_pixels = cv2.countNonZero(binary[self.top_margin:, :])
+        target_pixels = cv2.countNonZero(binary[self.top_margin :, :])
         if self.inverted:
             target_pixels = self.total_mid_pixels - target_pixels
 
         delta_mid = target_pixels / self.total_mid_pixels
         if self.debug:
-            self.logger.info('mid area ratio: %f %s (%f)', delta_mid,
-                             '<' if self.flipped else '>', self.mid_ratio)
+            self.logger.info(
+                "mid area ratio: %f %s (%f)",
+                delta_mid,
+                "<" if self.flipped else ">",
+                self.mid_ratio,
+            )
 
         if self.flipped:
             if delta_mid > self.mid_ratio:
@@ -240,17 +243,19 @@ class MotionDetector:
         if self.total_top_pixels == 0 or self.total_mid_pixels == 0:
             return None
 
-        roi_frame = frame if self.roi_area == MotionDetector.EMPTY_AREA else frame[
-            self.roi_area]
+        roi_frame = (
+            frame
+            if self.roi_area == MotionDetector.EMPTY_AREA
+            else frame[self.roi_area]
+        )
         value = self.binary(roi_frame)
 
         if self.debug:
-            cv2.imshow('ROI frame', roi_frame)
+            cv2.imshow("ROI frame", roi_frame)
             if self.inverted:
-                cv2.imshow('ROI frame - threshold (inverted)',
-                           cv2.bitwise_not(value))
+                cv2.imshow("ROI frame - threshold (inverted)", cv2.bitwise_not(value))
             else:
-                cv2.imshow('ROI frame - threshold', value)
+                cv2.imshow("ROI frame - threshold", value)
 
         if not self.measure(value):
             return None

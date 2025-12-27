@@ -9,7 +9,7 @@ from typing import Callable, Optional
 
 from serial import Serial
 
-__all__ = ('PyFt232', )
+__all__ = ("PyFt232",)
 
 
 def _dummy(*_):
@@ -21,8 +21,8 @@ class PyFt232:
     Raw level FT232 controll class
     """
 
-    PKT_START = 0xaa
-    PKT_END = 0xaa
+    PKT_START = 0xAA
+    PKT_END = 0xAA
 
     PKT_CMD_ACK = 0x00
 
@@ -45,20 +45,18 @@ class PyFt232:
     PKT_CMD_SPEED_UP = 0x01
     PKT_CMD_SPEED_DOWN = 0x02
 
-    #PKT_CMD_AUTO_LOADING = 0x05
-    #PKT_CMD_VERSION = 0x64
+    # PKT_CMD_AUTO_LOADING = 0x05
+    # PKT_CMD_VERSION = 0x64
 
     PKT_ID_MAX = 199
-    PKT_ID_ERROR = 0xff
+    PKT_ID_ERROR = 0xFF
 
-    def __init__(self,
-                 port: str = '/dev/ttyUSB0',
-                 baudrate: int = 19200,
-                 *,
-                 debug: bool = False):
+    def __init__(
+        self, port: str = "/dev/ttyUSB0", baudrate: int = 19200, *, debug: bool = False
+    ):
         self.debug = debug
         if self.debug:
-            self.logger = getLogger('PYFT232')
+            self.logger = getLogger("PYFT232")
             self.logger.info("serial port %s (%d)", port, baudrate)
 
         self.__ft232 = None
@@ -66,7 +64,7 @@ class PyFt232:
         self.__force_stop = False
         self.__values = [1] * 14  # Pin status
         for idx in (0, 1):
-            self.__values[idx] = 0xff  # NC
+            self.__values[idx] = 0xFF  # NC
 
         # init arduio
         ft232 = Serial(port=port, baudrate=baudrate, timeout=1)
@@ -75,7 +73,7 @@ class PyFt232:
         self.__ft232 = ft232
 
         self.__rx = Thread(target=self.__receiver)
-        self.__rx.name = 'Arduino Rx'
+        self.__rx.name = "Arduino Rx"
         self.__rx.start()
 
         self.__init()
@@ -84,14 +82,14 @@ class PyFt232:
         self.__tx_cv = Condition()
         self.__tx_queue = Queue()
         self.__tx = Thread(target=self.__transmitter)
-        self.__tx.name = 'Arduino Tx'
+        self.__tx.name = "Arduino Tx"
         self.__tx.start()
 
     def __del__(self):
         self.close()
 
     def __checksum(self, length: int, cmd: int, data: list):
-        return ~((length + cmd + sum(data)) & 0xff) & 0xff
+        return ~((length + cmd + sum(data)) & 0xFF) & 0xFF
 
     def __init(self):
         pass
@@ -114,9 +112,16 @@ class PyFt232:
                 break  # End of Tx
 
             ft232.write(
-                bytes([
-                    PyFt232.PKT_START, 0x05, cmd, data, self.__checksum(0x05, cmd, [data])
-                ]))
+                bytes(
+                    [
+                        PyFt232.PKT_START,
+                        0x05,
+                        cmd,
+                        data,
+                        self.__checksum(0x05, cmd, [data]),
+                    ]
+                )
+            )
 
     # Rx Thread
     def __receiver(self):

@@ -4,7 +4,7 @@ from iotdemo.tuning.color.QRangeSlider import QRangeSlider
 from PyQt5.QtCore import QCoreApplication, QMetaObject, pyqtSignal
 from PyQt5.QtWidgets import QFormLayout, QLabel, QWidget
 
-__all__ = ('ColorSlider', )
+__all__ = ("ColorSlider",)
 
 
 class Ui_Form(object):
@@ -37,13 +37,13 @@ class ColorSlider(QWidget, Ui_Form):
         self.max_prev = (-1, -1)
 
         for idx, (label, min_value, max_value, color) in enumerate(
-            (('H', 0, 180, '#999'), ('S', 0, 255, '#c90000'), ('V', 0, 255,
-                                                               '#0031a3'))):
+            (("H", 0, 180, "#999"), ("S", 0, 255, "#c90000"), ("V", 0, 255, "#0031a3"))
+        ):
             slider = QRangeSlider(self)
             slider.setMin(min_value)
             slider.setMax(max_value)
             slider.setRange(min_value, max_value)
-            slider.handle.setStyleSheet(f'background: {color};')
+            slider.handle.setStyleSheet(f"background: {color};")
 
             slider.startValueChanged.connect(partial(self.update_min, idx))
             slider.endValueChanged.connect(partial(self.update_max, idx))
@@ -59,7 +59,7 @@ class ColorSlider(QWidget, Ui_Form):
             return
 
         self.min_prev = (ch, value)
-        self.on_update.emit(('min', ch, value))
+        self.on_update.emit(("min", ch, value))
 
     def update_max(self, ch, value):
         _ch, _value = self.max_prev
@@ -67,7 +67,7 @@ class ColorSlider(QWidget, Ui_Form):
             return
 
         self.max_prev = (ch, value)
-        self.on_update.emit(('max', ch, value))
+        self.on_update.emit(("max", ch, value))
 
     @property
     def values(self):

@@ -1,19 +1,23 @@
 """
 Debouncing decorator
 """
+
 from threading import Timer
 
-__all__ = ('debounce', )
+__all__ = ("debounce",)
 
 
 def debounce(wait):
-    """ Debounce decorator API"""
+    """Debounce decorator API"""
+
     def decorator(func):
-        """ for decorator """
+        """for decorator"""
+
         def debounced(*args, **kwargs):
-            """ for debounced """
+            """for debounced"""
+
             def call_it():
-                """ real func """
+                """real func"""
                 func(*args, **kwargs)
 
             try:

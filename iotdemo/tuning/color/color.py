@@ -12,8 +12,7 @@ from iotdemo.tuning.color.utils import load_dialog, save_dialog
 from iotdemo.tuning.color.VideoThread import VideoThread
 from PyQt5 import uic
 from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtWidgets import (QApplication, QComboBox, QMainWindow,
-                             QTableWidgetItem)
+from PyQt5.QtWidgets import QApplication, QComboBox, QMainWindow, QTableWidgetItem
 
 
 class MainWindow(QMainWindow):
@@ -21,20 +20,23 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__(*args, **kwargs)
         uic.loadUi(
             os.path.join(pathlib.Path(__file__).parent.resolve(), "main.ui"),
-            self, 'iotdemo.tuning.color')
+            self,
+            "iotdemo.tuning.color",
+        )
         self.updated = True
 
         if video:
-            self.device = VideoThread(video, self, fps=.03)
+            self.device = VideoThread(video, self, fps=0.03)
             self.device.frame.connect(self.on_frame)
             self.device.start()
         else:
             self.device = None
             self.combo_source.addItems(
-                [f"Camera {idx}" for idx in self.scan_camera_ids()])
+                [f"Camera {idx}" for idx in self.scan_camera_ids()]
+            )
 
         self.detector = ColorDetector()
-        self.label = ColorLabel('', (0, 0, 0), (180, 255, 255), 0)
+        self.label = ColorLabel("", (0, 0, 0), (180, 255, 255), 0)
 
         self.colorslider.on_update.connect(self.colorslider_changed)
         self.table.on_select_row.connect(self.select_config)
@@ -66,8 +68,7 @@ class MainWindow(QMainWindow):
         self.line_label.setText(label.name)
         self.slider_iteration.setValue(label.dilate_iterations)
 
-        for row, (start,
-                  end) in enumerate(zip(label.min_range, label.max_range)):
+        for row, (start, end) in enumerate(zip(label.min_range, label.max_range)):
             self.colorslider.set_range(row, start, end)
 
         self.updated = True
@@ -76,7 +77,7 @@ class MainWindow(QMainWindow):
     def on_frame(self, frame):
         mask = self.detector.mask(frame, self.label)
         img = cv2.bitwise_and(frame, frame, mask=mask)
-        cv2.imshow('Preview', img)
+        cv2.imshow("Preview", img)
 
     # UI Event
     @pyqtSlot()

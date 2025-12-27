@@ -1,9 +1,15 @@
 from iotdemo.color.color_label import ColorLabel
 from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
-from PyQt5.QtWidgets import (QComboBox, QFileDialog, QLabel, QPushButton,
-                             QTableWidget, QTableWidgetItem)
+from PyQt5.QtWidgets import (
+    QComboBox,
+    QFileDialog,
+    QLabel,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+)
 
-__all__ = ('ConfigTable', )
+__all__ = ("ConfigTable",)
 
 
 class ConfigTable(QTableWidget):
@@ -54,12 +60,12 @@ class ConfigTable(QTableWidget):
         self.setItem(row, self.ID_LABEL, QTableWidgetItem(label.name))
 
         # Min
-        item = QTableWidgetItem(', '.join(str(x) for x in label.min_range))
+        item = QTableWidgetItem(", ".join(str(x) for x in label.min_range))
         item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
         self.setItem(row, self.ID_MIN, item)
 
         # Max
-        item = QTableWidgetItem(', '.join(str(x) for x in label.max_range))
+        item = QTableWidgetItem(", ".join(str(x) for x in label.max_range))
         item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
         self.setItem(row, self.ID_MAX, item)
 

@@ -7,12 +7,12 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-__all__ = ('NousUploader', )
+__all__ = ("NousUploader",)
 
 
 class NousUploader:
     def __init__(self, base_address: str, *, async_mode: bool = True):
-        self.base_url = base_address.rstrip('/')
+        self.base_url = base_address.rstrip("/")
         self.session = None
         self.token = None
         self.headers = {}
@@ -45,26 +45,25 @@ class NousUploader:
         session = requests.Session()
 
         # fetch token
-        res = session.post(f'{self.base_url}/authentication',
-                           data={
-                               "username": f"{nous_id}",
-                               "password": f"{nous_pw}"
-                           },
-                           files={'_': '_'},
-                           verify=False)
+        res = session.post(
+            f"{self.base_url}/authentication",
+            data={"username": f"{nous_id}", "password": f"{nous_pw}"},
+            files={"_": "_"},
+            verify=False,
+        )
 
         # store token
-        self.token = res.json().get('secure_token', '')
+        self.token = res.json().get("secure_token", "")
         self.session = session
         self.headers["Authorization"] = f"bearer_token {self.token}"
 
         # fetch project ids
-        res = session.get(f'{self.base_url}/projects',
-                          headers=self.headers,
-                          verify=False)
+        res = session.get(
+            f"{self.base_url}/projects", headers=self.headers, verify=False
+        )
 
-        projects = res.json().get('items', [])
-        self.project_ids = {data['name']: data['id'] for data in projects}
+        projects = res.json().get("items", [])
+        self.project_ids = {data["name"]: data["id"] for data in projects}
 
         if self.thread:
             self.thread.start()
@@ -81,14 +80,13 @@ class NousUploader:
         file_data = cv2.imencode(".jpg", file_data)[1]
 
         res = self.session.post(
-            f'{self.base_url}/projects/{project_id}/media/images',
+            f"{self.base_url}/projects/{project_id}/media/images",
             headers=self.headers,
             files={
-                'file': (file_name, file_data.tobytes(), 'image/jpeg', {
-                    'Expires': '0'
-                })
+                "file": (file_name, file_data.tobytes(), "image/jpeg", {"Expires": "0"})
             },
-            verify=False)
+            verify=False,
+        )
 
         return res.status_code == 200
 

@@ -3,7 +3,7 @@ from time import sleep
 import cv2
 from PyQt5 import QtCore
 
-__all__ = ('VideoThread', )
+__all__ = ("VideoThread",)
 
 
 class VideoThread(QtCore.QThread):
@@ -17,7 +17,7 @@ class VideoThread(QtCore.QThread):
 
         ret, frame = self.cam.read()
         if not ret:
-            raise Exception('Unable to read frame')
+            raise Exception("Unable to read frame")
 
         self.height, self.width, *_ = frame.shape
 

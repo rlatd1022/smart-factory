@@ -1,6 +1,7 @@
 """
 Input / Output Pin map for the smart factory demo kit
 """
+
 from enum import IntEnum
 
 

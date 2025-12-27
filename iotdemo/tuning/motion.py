@@ -23,33 +23,32 @@ def _to_point_list_(value):
 
 
 class VideoFrame:
-    MAIN_WINDOW = 'Input'
-    ROI_WINDOW = 'Select ROI'
-    TUNING_WINDOW = 'Threshold'
-    SKIP_TIME_TRACKBAR = 'Skip Time'
-    THRESHOLD_TRACKBAR = 'Threshold'
-    TOP_RATIO_TRACKBAR = 'Top Ratio'
-    MID_RATIO_TRACKBAR = 'Mid Ratio'
+    MAIN_WINDOW = "Input"
+    ROI_WINDOW = "Select ROI"
+    TUNING_WINDOW = "Threshold"
+    SKIP_TIME_TRACKBAR = "Skip Time"
+    THRESHOLD_TRACKBAR = "Threshold"
+    TOP_RATIO_TRACKBAR = "Top Ratio"
+    MID_RATIO_TRACKBAR = "Mid Ratio"
 
     def __init__(self, src, crop, args):
         # Frame source
         self.cap = cv2.VideoCapture(src)
-        self.is_live = self.cap.getBackendName() in {'V4L2', 'DSHOW', 'MSMF'}
+        self.is_live = self.cap.getBackendName() in {"V4L2", "DSHOW", "MSMF"}
         self.paused = False
         self.inverted = args.invert
 
         # Detector
         self.motion = MotionDetector(debug=args.debug)
         if args.loadpreset:
-            self.motion.load_preset(args.loadpreset, 'default')
+            self.motion.load_preset(args.loadpreset, "default")
         else:
             self.motion.load_preset(default=True)
             self.motion.set_crop_box((0, 0), crop)
             self.motion.set_inverted(args.invert)
             self.motion.set_flipped(args.flip)
 
-        self.save_preset = partial(self.motion.save_preset, args.preset,
-                                   args.key)
+        self.save_preset = partial(self.motion.save_preset, args.preset, args.key)
 
         # Internal variables
         self.actions = {}
@@ -74,10 +73,10 @@ class VideoFrame:
         (x1, y1), (x2, y2) = self.motion.roi_box
         w, h = x2 - x1, y2 - y1
 
-        #cw = int(self.crop_w / 2)
-        #cw += int((self.crop_w - w) / 2)
-        #ch = int(self.crop_h / 2)
-        #ch -= self.motion.top_margin
+        # cw = int(self.crop_w / 2)
+        # cw += int((self.crop_w - w) / 2)
+        # ch = int(self.crop_h / 2)
+        # ch -= self.motion.top_margin
 
         cw = int(self.crop_w / 2)
         cw += int((self.crop_w - w) / 2)
@@ -125,15 +124,18 @@ class VideoFrame:
                 if not self.roi_opened:
                     return
 
-                cv2.setTrackbarPos("Y" if idx else "X", VideoFrame.ROI_WINDOW,
-                                   self.rel_roi_box_pos[idx])
+                cv2.setTrackbarPos(
+                    "Y" if idx else "X",
+                    VideoFrame.ROI_WINDOW,
+                    self.rel_roi_box_pos[idx],
+                )
 
             return _set
 
         # Shortcut map
         self.actions = {
-            ord('q'): self.close,
-            ord(' '): self._space_event,
+            ord("q"): self.close,
+            ord(" "): self._space_event,
             ord("r"): self.select_roi,
             81: _wrapper(0, -1),
             82: _wrapper(1, -1),
@@ -145,21 +147,34 @@ class VideoFrame:
         cv2.namedWindow(VideoFrame.MAIN_WINDOW)
         cv2.namedWindow(VideoFrame.TUNING_WINDOW)
 
-        cv2.createTrackbar(VideoFrame.SKIP_TIME_TRACKBAR,
-                           VideoFrame.TUNING_WINDOW,
-                           int(self.motion.skip_time * 1000), 3000,
-                           self._skip_time_callback)
-        cv2.createTrackbar(VideoFrame.THRESHOLD_TRACKBAR,
-                           VideoFrame.TUNING_WINDOW, self.motion.threshold,
-                           255, self._threshold_callback)
-        cv2.createTrackbar(VideoFrame.TOP_RATIO_TRACKBAR,
-                           VideoFrame.TUNING_WINDOW,
-                           int(self.motion.top_ratio * 1000), 1000,
-                           self._top_ratio_callback)
-        cv2.createTrackbar(VideoFrame.MID_RATIO_TRACKBAR,
-                           VideoFrame.TUNING_WINDOW,
-                           int(self.motion.mid_ratio * 1000), 1000,
-                           self._mid_ratio_callback)
+        cv2.createTrackbar(
+            VideoFrame.SKIP_TIME_TRACKBAR,
+            VideoFrame.TUNING_WINDOW,
+            int(self.motion.skip_time * 1000),
+            3000,
+            self._skip_time_callback,
+        )
+        cv2.createTrackbar(
+            VideoFrame.THRESHOLD_TRACKBAR,
+            VideoFrame.TUNING_WINDOW,
+            self.motion.threshold,
+            255,
+            self._threshold_callback,
+        )
+        cv2.createTrackbar(
+            VideoFrame.TOP_RATIO_TRACKBAR,
+            VideoFrame.TUNING_WINDOW,
+            int(self.motion.top_ratio * 1000),
+            1000,
+            self._top_ratio_callback,
+        )
+        cv2.createTrackbar(
+            VideoFrame.MID_RATIO_TRACKBAR,
+            VideoFrame.TUNING_WINDOW,
+            int(self.motion.mid_ratio * 1000),
+            1000,
+            self._mid_ratio_callback,
+        )
 
         cv2.moveWindow(VideoFrame.MAIN_WINDOW, 100, 100)
         cv2.moveWindow(VideoFrame.TUNING_WINDOW, 800, 125)
@@ -246,16 +261,41 @@ class VideoFrame:
         cv2.namedWindow(VideoFrame.ROI_WINDOW)
         cv2.imshow(VideoFrame.ROI_WINDOW, self.frame)
         cv2.setMouseCallback(VideoFrame.ROI_WINDOW, self._mouse_event)
-        cv2.createTrackbar("M", VideoFrame.ROI_WINDOW, self.motion.top_margin,
-                           self.crop_h, self._update_margin)
-        cv2.createTrackbar("W", VideoFrame.ROI_WINDOW, self.rel_roi_box_pos[2],
-                           self.crop_w, _roi_wrapper(2))
-        cv2.createTrackbar("H", VideoFrame.ROI_WINDOW, self.rel_roi_box_pos[3],
-                           self.crop_h, _roi_wrapper(3))
-        cv2.createTrackbar("X", VideoFrame.ROI_WINDOW, self.rel_roi_box_pos[0],
-                           self.crop_w, _roi_wrapper(0))
-        cv2.createTrackbar("Y", VideoFrame.ROI_WINDOW, self.rel_roi_box_pos[1],
-                           self.crop_h, _roi_wrapper(1))
+        cv2.createTrackbar(
+            "M",
+            VideoFrame.ROI_WINDOW,
+            self.motion.top_margin,
+            self.crop_h,
+            self._update_margin,
+        )
+        cv2.createTrackbar(
+            "W",
+            VideoFrame.ROI_WINDOW,
+            self.rel_roi_box_pos[2],
+            self.crop_w,
+            _roi_wrapper(2),
+        )
+        cv2.createTrackbar(
+            "H",
+            VideoFrame.ROI_WINDOW,
+            self.rel_roi_box_pos[3],
+            self.crop_h,
+            _roi_wrapper(3),
+        )
+        cv2.createTrackbar(
+            "X",
+            VideoFrame.ROI_WINDOW,
+            self.rel_roi_box_pos[0],
+            self.crop_w,
+            _roi_wrapper(0),
+        )
+        cv2.createTrackbar(
+            "Y",
+            VideoFrame.ROI_WINDOW,
+            self.rel_roi_box_pos[1],
+            self.crop_h,
+            _roi_wrapper(1),
+        )
 
     def draw_roi_frame(self, frame):
         buff = frame.copy()
@@ -318,7 +358,7 @@ class VideoFrame:
 def main(args):
     if args.debug:
         logging.basicConfig(level=logging.INFO)
-        logging.info('Debug mode enabled')
+        logging.info("Debug mode enabled")
 
     if args.save:
         makedirs(args.save, exist_ok=True)
@@ -338,7 +378,7 @@ def main(args):
             # save detected images
             if args.save and detected is not False:
                 count += 1
-                path = os.path.join(args.save, f'frame{count:03d}.jpg')
+                path = os.path.join(args.save, f"frame{count:03d}.jpg")
                 cv2.imwrite(path, detected)
 
             # FPS control
@@ -352,69 +392,58 @@ def main(args):
                 prev_time = now
 
             # Shortcut
-            key = cv2.waitKey(sleep_delta) & 0xff
+            key = cv2.waitKey(sleep_delta) & 0xFF
             if cap.shortcut(key) is False:
                 break
 
 
 def trampoline():
-    parser = ArgumentParser(prog='python3 motion.py',
-                            description="Motion detector tuning tool")
+    parser = ArgumentParser(
+        prog="python3 motion.py", description="Motion detector tuning tool"
+    )
 
     parser.add_argument("-c", "--camera", type=int, help="Camera device ID")
-    parser.add_argument("-l",
-                        "--loop",
-                        default=False,
-                        action='store_true',
-                        help="Loop video playback")
-    parser.add_argument("-I",
-                        "--invert",
-                        default=False,
-                        action='store_true',
-                        help="Invert mask calculation")
-    parser.add_argument("-F",
-                        "--flip",
-                        default=False,
-                        action='store_true',
-                        help="Flip top/mid mask calculation")
-    parser.add_argument("-D",
-                        "--debug",
-                        default=False,
-                        action='store_true',
-                        help="Enable MotionDetector debug flag")
-    parser.add_argument("-p",
-                        "--preset",
-                        default='motion.cfg',
-                        type=str,
-                        help="Preset file path to save")
-    parser.add_argument("-P",
-                        "--loadpreset",
-                        type=str,
-                        help="Preset file path to load")
-    parser.add_argument("-k",
-                        "--key",
-                        default='default',
-                        type=str,
-                        help="Preset key to save")
-    parser.add_argument("-s",
-                        "--save",
-                        type=str,
-                        help="Set the saving path of images")
-    parser.add_argument('path',
-                        metavar='path',
-                        type=str,
-                        nargs='?',
-                        help='path of video file')
-    parser.add_argument("-W",
-                        "--width",
-                        default=224,
-                        type=int,
-                        help="Crop width")
-    parser.add_argument("-H",
-                        "--height",
-                        default=224,
-                        type=int,
-                        help="Crop height")
+    parser.add_argument(
+        "-l", "--loop", default=False, action="store_true", help="Loop video playback"
+    )
+    parser.add_argument(
+        "-I",
+        "--invert",
+        default=False,
+        action="store_true",
+        help="Invert mask calculation",
+    )
+    parser.add_argument(
+        "-F",
+        "--flip",
+        default=False,
+        action="store_true",
+        help="Flip top/mid mask calculation",
+    )
+    parser.add_argument(
+        "-D",
+        "--debug",
+        default=False,
+        action="store_true",
+        help="Enable MotionDetector debug flag",
+    )
+    parser.add_argument(
+        "-p",
+        "--preset",
+        default="motion.cfg",
+        type=str,
+        help="Preset file path to save",
+    )
+    parser.add_argument("-P", "--loadpreset", type=str, help="Preset file path to load")
+    parser.add_argument(
+        "-k", "--key", default="default", type=str, help="Preset key to save"
+    )
+    parser.add_argument("-s", "--save", type=str, help="Set the saving path of images")
+    parser.add_argument(
+        "path", metavar="path", type=str, nargs="?", help="path of video file"
+    )
+    parser.add_argument("-W", "--width", default=224, type=int, help="Crop width")
+    parser.add_argument("-H", "--height", default=224, type=int, help="Crop height")
 
     args = parser.parse_args()
 
@@ -422,18 +451,18 @@ def trampoline():
     if args.path:
         frame_src = args.path
         if not exists(frame_src):
-            print('[-] Invalid frame source:', frame_src)
+            print("[-] Invalid frame source:", frame_src)
             return
 
     if frame_src is None:
         parser.print_usage()
         return
 
-    setattr(args, 'frame_src', frame_src)
+    setattr(args, "frame_src", frame_src)
     main(args)
 
     cv2.destroyAllWindows()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     trampoline()

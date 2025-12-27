@@ -9,7 +9,7 @@ from typing import Callable, Optional
 
 from serial import Serial
 
-__all__ = ('PyDuino', )
+__all__ = ("PyDuino",)
 
 
 def _dummy(*_):
@@ -22,20 +22,16 @@ class PyDuino:
     """
 
     PACKET_START = 0x55
-    PACKET_END = 0xaa
+    PACKET_END = 0xAA
 
     PACKET_ID_INTERRUPT = 0
     PACKET_ID_MAX = 199
-    PACKET_ID_ERROR = 0xff
+    PACKET_ID_ERROR = 0xFF
 
-    def __init__(self,
-                 port: str,
-                 baudrate: int = 115200,
-                 *,
-                 debug: bool = False):
+    def __init__(self, port: str, baudrate: int = 115200, *, debug: bool = False):
         self.debug = debug
         if self.debug:
-            self.logger = getLogger('PYDUINO')
+            self.logger = getLogger("PYDUINO")
             self.logger.info("serial port %s (%d)", port, baudrate)
 
         self.__arduino = None
@@ -44,7 +40,7 @@ class PyDuino:
         self.__watcher = {}
         self.__values = [1] * 14  # Pin status
         for idx in (0, 1):
-            self.__values[idx] = 0xff  # NC
+            self.__values[idx] = 0xFF  # NC
 
         # init arduio
         arduino = Serial(port=port, baudrate=baudrate, timeout=1)
@@ -57,7 +53,7 @@ class PyDuino:
         self.__init_count = 0
 
         self.__rx = Thread(target=self.__receiver)
-        self.__rx.name = 'Arduino Rx'
+        self.__rx.name = "Arduino Rx"
         self.__rx.start()
 
         self.__init()
@@ -67,7 +63,7 @@ class PyDuino:
         self.__tx_queue = Queue()
         self.__tx_packet_id = 1
         self.__tx = Thread(target=self.__transmitter)
-        self.__tx.name = 'Arduino Tx'
+        self.__tx.name = "Arduino Tx"
         self.__tx.start()
 
     def __del__(self):
@@ -102,19 +98,17 @@ class PyDuino:
             if pin is None:
                 break  # End of Tx
 
-            pin = int(pin) & 0xff
-            value = int(value) & 0xff
+            pin = int(pin) & 0xFF
+            value = int(value) & 0xFF
 
             arduino.write(
-                bytes([
-                    PyDuino.PACKET_START, packet_id, pin, value,
-                    PyDuino.PACKET_END
-                ]))
+                bytes([PyDuino.PACKET_START, packet_id, pin, value, PyDuino.PACKET_END])
+            )
 
     # Rx Thread
     def __receiver(self):
         for idx in self.__init_input_pins:
-            self.__values[idx] = 0xff
+            self.__values[idx] = 0xFF
             self.watch(idx, self.__wait_for_input_status)
 
         while self.__force_stop is False:
@@ -221,10 +215,8 @@ class PyDuino:
         return self.__values[pin]
 
     def watch(
-            self,
-            pin: int,
-            callback: Optional[Callable[[int, int, int],
-                                        None]] = None) -> None:
+        self, pin: int, callback: Optional[Callable[[int, int, int], None]] = None
+    ) -> None:
         """
         Set callback function for given pin
         """

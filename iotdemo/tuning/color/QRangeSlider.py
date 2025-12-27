@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-__all__ = ('QRangeSlider')
+__all__ = "QRangeSlider"
 
 DEFAULT_CSS = """
 QRangeSlider * {
@@ -32,8 +32,7 @@ QRangeSlider > QSplitter::handle:pressed {
 
 
 def scale(val, src, dst):
-    return int(((val - src[0]) / float(src[1] - src[0])) * (dst[1] - dst[0]) +
-               dst[0])
+    return int(((val - src[0]) / float(src[1] - src[0])) * (dst[1] - dst[0]) + dst[0])
 
 
 class Ui_Form(object):
@@ -77,14 +76,14 @@ class Element(QtWidgets.QGroupBox):
         self.parent().setStyleSheet(style)
 
     def textColor(self):
-        return getattr(self, '__textColor', QtGui.QColor(125, 125, 125))
+        return getattr(self, "__textColor", QtGui.QColor(125, 125, 125))
 
     def setTextColor(self, color):
         if type(color) == tuple and len(color) == 3:
             color = QtGui.QColor(color[0], color[1], color[2])
         elif type(color) == int:
             color = QtGui.QColor(color, color, color)
-        setattr(self, '__textColor', color)
+        setattr(self, "__textColor", color)
 
     def paintEvent(self, event):
         qp = QtGui.QPainter()
@@ -100,7 +99,7 @@ class Head(Element):
 
     def drawText(self, event, qp):
         qp.setPen(self.textColor())
-        qp.setFont(QtGui.QFont('Arial', 10))
+        qp.setFont(QtGui.QFont("Arial", 10))
         qp.drawText(event.rect(), QtCore.Qt.AlignLeft, str(self.main.min()))
 
 
@@ -110,7 +109,7 @@ class Tail(Element):
 
     def drawText(self, event, qp):
         qp.setPen(self.textColor())
-        qp.setFont(QtGui.QFont('Arial', 10))
+        qp.setFont(QtGui.QFont("Arial", 10))
         qp.drawText(event.rect(), QtCore.Qt.AlignRight, str(self.main.max()))
 
 
@@ -120,20 +119,20 @@ class Handle(Element):
 
     def drawText(self, event, qp):
         qp.setPen(self.textColor())
-        qp.setFont(QtGui.QFont('Arial', 10))
+        qp.setFont(QtGui.QFont("Arial", 10))
         qp.drawText(event.rect(), QtCore.Qt.AlignLeft, str(self.main.start()))
         qp.drawText(event.rect(), QtCore.Qt.AlignRight, str(self.main.end()))
 
     def mouseMoveEvent(self, event):
         event.accept()
         mx = event.globalX()
-        _mx = getattr(self, '__mx', None)
+        _mx = getattr(self, "__mx", None)
         if not _mx:
-            setattr(self, '__mx', mx)
+            setattr(self, "__mx", mx)
             dx = 0
         else:
             dx = mx - _mx
-        setattr(self, '__mx', mx)
+        setattr(self, "__mx", mx)
         if dx == 0:
             event.ignore()
             return
@@ -187,27 +186,27 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
         self.setDrawValues(True)
 
     def min(self):
-        return getattr(self, '__min', None)
+        return getattr(self, "__min", None)
 
     def max(self):
-        return getattr(self, '__max', None)
+        return getattr(self, "__max", None)
 
     def setMin(self, value):
-        setattr(self, '__min', value)
+        setattr(self, "__min", value)
         self.minValueChanged.emit(value)
 
     def setMax(self, value):
-        setattr(self, '__max', value)
+        setattr(self, "__max", value)
         self.maxValueChanged.emit(value)
 
     def start(self):
-        return getattr(self, '__start', None)
+        return getattr(self, "__start", None)
 
     def end(self):
-        return getattr(self, '__end', None)
+        return getattr(self, "__end", None)
 
     def _setStart(self, value):
-        setattr(self, '__start', value)
+        setattr(self, "__start", value)
         self.startValueChanged.emit(value)
 
     def setStart(self, value):
@@ -218,7 +217,7 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
         self._setStart(value)
 
     def _setEnd(self, value):
-        setattr(self, '__end', value)
+        setattr(self, "__end", value)
         self.endValueChanged.emit(value)
 
     def setEnd(self, value):
@@ -229,10 +228,10 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
         self._setEnd(value)
 
     def drawValues(self):
-        return getattr(self, '__drawValues', None)
+        return getattr(self, "__drawValues", None)
 
     def setDrawValues(self, draw):
-        setattr(self, '__drawValues', draw)
+        setattr(self, "__drawValues", draw)
 
     def getRange(self):
         return (self.start(), self.end())

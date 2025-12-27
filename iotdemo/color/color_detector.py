@@ -1,6 +1,7 @@
 """
 Simple color detection algorithm
 """
+
 from logging import getLogger
 from time import time
 
@@ -9,17 +10,18 @@ import numpy as np
 from iotdemo.color.color_label import ColorLabel
 from iotdemo.common.preset import load_preset, save_preset
 
-__all__ = ('ColorDetector', )
+__all__ = ("ColorDetector",)
 
 
 class ColorDetector:
     """
     Simple color detect class
     """
+
     def __init__(self, *, debug=False):
         self.debug = debug
         if self.debug:
-            self.logger = getLogger('COLOR')
+            self.logger = getLogger("COLOR")
 
         self.labels = []
 
@@ -27,13 +29,11 @@ class ColorDetector:
     def preset(self):
         return {label.name: label.to_tuple() for label in self.labels}
 
-    def load_preset(self,
-                    path: str = 'color.cfg',
-                    key: str = 'default',
-                    *,
-                    default: bool = False):
+    def load_preset(
+        self, path: str = "color.cfg", key: str = "default", *, default: bool = False
+    ):
         if self.debug:
-            self.logger.info('load preset from %s / %s', path, key)
+            self.logger.info("load preset from %s / %s", path, key)
 
         data = load_preset(path, key)
         if data is None:
@@ -47,7 +47,7 @@ class ColorDetector:
 
         self.labels = labels
 
-    def save_preset(self, path: str, key: str = 'default'):
+    def save_preset(self, path: str, key: str = "default"):
         save_preset(path, self.preset, key)
 
     def mask(self, frame, label, *, is_hsv=False):
@@ -68,7 +68,7 @@ class ColorDetector:
         for label in self.labels:
             mask = self.mask(hsv, label, is_hsv=True)
             if self.debug:
-                cv2.imshow(f'Debug: {label.name}', mask)
+                cv2.imshow(f"Debug: {label.name}", mask)
 
             result.append((label.name, cv2.countNonZero(mask) / total_pixels))
 

@@ -3,7 +3,7 @@ from math import exp
 import cv2
 import numpy as np
 
-__all__ = ('YoloV3TinyParser', )
+__all__ = ("YoloV3TinyParser",)
 
 
 def overlapped_ratio(a, b):
@@ -28,7 +28,7 @@ def overlapped_ratio(a, b):
 
 
 class Layer:
-    __slots__ = 'loc', 'row', 'col', 'n', 'nwh', 'w', 'h', 'wh', 'output'
+    __slots__ = "loc", "row", "col", "n", "nwh", "w", "h", "wh", "output"
 
     def __init__(self, output):
         self.loc = self.row = self.col = self.n = self.nwh = -1
@@ -38,12 +38,14 @@ class Layer:
 
 
 class YoloV3TinyParser:
-    def __init__(self,
-                 frame_size,
-                 input_size,
-                 classes=1,
-                 anchors=(10, 14, 23, 27, 37, 58, 81, 82, 135, 169, 344, 319),
-                 threshold=.3):
+    def __init__(
+        self,
+        frame_size,
+        input_size,
+        classes=1,
+        anchors=(10, 14, 23, 27, 37, 58, 81, 82, 135, 169, 344, 319),
+        threshold=0.3,
+    ):
         fw, fh = frame_size
         iw, ih = input_size
         self.input_size = input_size
@@ -53,9 +55,7 @@ class YoloV3TinyParser:
         self.threshold = threshold
 
     def reshape_input(self, frame):
-        nchw = cv2.resize(frame,
-                          self.input_size,
-                          interpolation=cv2.INTER_NEAREST)
+        nchw = cv2.resize(frame, self.input_size, interpolation=cv2.INTER_NEAREST)
         nchw = nchw[np.newaxis, :, :, :]  # HWC to NHWC
         return nchw.transpose((0, 3, 1, 2))  # NHWC to NCHW
 
@@ -92,8 +92,7 @@ class YoloV3TinyParser:
                     if prob < self.threshold:
                         continue
 
-                    results.append(
-                        (j, prob, self.original_position(*box_position)))
+                    results.append((j, prob, self.original_position(*box_position)))
 
         return results
 
@@ -117,8 +116,8 @@ class YoloV3TinyParser:
         trashs = set()
 
         for i, curr in enumerate(results):
-            for j, result in enumerate(results[i + 1:]):
-                if overlapped_ratio(curr[2], result[2]) < .5:
+            for j, result in enumerate(results[i + 1 :]):
+                if overlapped_ratio(curr[2], result[2]) < 0.5:
                     continue
 
                 if curr[1] < result[1]:
