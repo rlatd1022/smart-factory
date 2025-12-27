@@ -10,8 +10,15 @@ pip install -r requirements.txt
 ```
 
 
+## Run
 ```
 (.venv) pip install --upgrade pip
 (.venv) bash build.sh
+(.venv) python factory.py -d <arduino_device>
+```
+
+
+## ROI Setting
+```
 (.venv) iotdemo-motion-detector -l resources/conveyor.mp4
 ```
