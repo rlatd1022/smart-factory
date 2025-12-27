@@ -7,6 +7,7 @@ from os import listdir
 from sys import platform
 from time import sleep
 from typing import Optional, Union
+from enum import Enum
 
 from iotdemo.common.debounce import debounce
 from iotdemo.factory_controller.pins import Inputs, Outputs
@@ -24,7 +25,18 @@ class FactoryController:
     DEV_ON = False
     DEV_OFF = True
 
-    def __init__(self, port: Optional[Union[str, int]] = None, *, debug: bool = True):
+    class Connector(Enum):
+        FT232 = 1
+        ARDUINO = 2
+        AUTO = 3
+
+    def __init__(
+        self,
+        conn: Connector,
+        port: Optional[Union[str, int]] = None,
+        *,
+        debug: bool = True,
+    ):
         self.debug = debug
         if self.debug:
             self.logger = getLogger("CONTROLLER")
@@ -36,7 +48,9 @@ class FactoryController:
 
         # open device
         self.port = self.__detect_serial(port if port is not None else -1)
-        if self.port is not None and "ttyUSB" in self.port:
+        if conn == FactoryController.Connector.FT232 and (
+            self.port is not None and "ttyUSB" in self.port
+        ):
             try:
                 self.__device = PyFt232(self.port, debug=debug)
                 self.__device_name = "ft232"
