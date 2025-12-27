@@ -1,8 +1,9 @@
-opencv-python==4.2.0.32
-opencv-contrib-python==4.2.0.32
-numpy
-scikit-build
-pillow
-pyserial
-pyqt5==5.14
-openvino
+opencv-python==4.12.0.88
+opencv-contrib-python==4.12.0.88
+numpy>=2,<2.3.0
+scikit-build==0.17.6
+pillow==10.4.0
+pyserial==3.5
+pyqt5==5.15.11
+openvino==2025.4.1
+black==25.12.0

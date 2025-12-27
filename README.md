@@ -1,14 +1,17 @@
-# Smart Factory
+# Smart Factory For Education
 
 
-## Setup the Environment
+## Setup
 
-```bash
-$ python3.8 -m pip install -U pip
-$ python3.8 -m venv .sf_env
-$ source .sf_env/bin/activate
-(.sf_env) $ pip install -U pip
-(.sf_env) $ pip install -r requirements.txt
-(.sf_env) $ bash build.sh
-(.sf_env) $ iotdemo-motion-detector -l resources/conveyor.mp4
+```
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+
+```
+(.venv) pip install --upgrade pip
+(.venv) bash build.sh
+(.venv) iotdemo-motion-detector -l resources/conveyor.mp4
 ```
