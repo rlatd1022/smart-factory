@@ -148,7 +148,7 @@ def main(video_file):
         # Save HSV filter values as a new preset
         print("\n" + "=" * 60)
         print("Saving HSV filter calibration...")
-        hsv_preset = {"hsv_filter": (h_min, s_min, v_min, h_max, s_max, v_max, 1)}
+        hsv_preset = {"blue": (h_min, s_min, v_min, h_max, s_max, v_max, 1)}
         save_color_config("color.cfg", hsv_preset)
         print("=" * 60)
 
