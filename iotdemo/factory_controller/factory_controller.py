@@ -36,8 +36,12 @@ class FactoryController:
         port: Optional[Union[str, int]] = None,
         *,
         debug: bool = True,
+        pulse_duration: float = 0.05,
+        reverse_actuator: bool = True,
     ):
         self.debug = debug
+        self.pulse_duration = pulse_duration
+        self.reverse_actuator = reverse_actuator
         if self.debug:
             self.logger = getLogger("CONTROLLER")
 
@@ -47,22 +51,32 @@ class FactoryController:
         self.__device_name = None
 
         # open device
-        self.port = self.__detect_serial(port if port is not None else -1)
-        if conn == FactoryController.Connector.FT232 and (
-            self.port is not None and "ttyUSB" in self.port
-        ):
-            try:
-                self.__device = PyFt232(self.port, debug=debug)
-                self.__device_name = "ft232"
-            except Exception:
-                self.__device = None
-        else:
-            try:
-                self.__device = PyDuino(self.port, debug=debug)
-                self.__device_name = "arduino"
-            except Exception:
-                self.__device = None
+        candidate_ports = self.__get_candidate_ports(port if port is not None else -1)
+        self.port = None
 
+        for candidate in candidate_ports:
+            if conn == FactoryController.Connector.FT232 and "ttyUSB" in candidate:
+                try:
+                    self.__device = PyFt232(candidate, debug=debug)
+                    self.__device_name = "ft232"
+                    self.port = candidate
+                    break
+                except Exception as e:
+                    if self.debug:
+                        self.logger.warning(f"FT232 connection failed on {candidate}: {e}")
+                    self.__device = None
+            else:
+                try:
+                    self.__device = PyDuino(candidate, debug=debug)
+                    self.__device_name = "arduino"
+                    self.port = candidate
+                    break
+                except Exception as e:
+                    if self.debug:
+                        self.logger.warning(f"PyDuino connection failed on {candidate}: {e}")
+                    self.__device = None
+
+        if self.__device_name == "arduino" and not self.is_dummy:
             # Arduino beacon indicator
             self.red = False
             self.orange = True
@@ -72,43 +86,52 @@ class FactoryController:
             self.color_sensor_status = False
 
             # interrupt handler
-            if not self.is_dummy:
-                self.__device.watch(Inputs.START_BUTTON, self.__button_interrupt)
-                self.__device.watch(Inputs.STOP_BUTTON, self.__button_interrupt)
+            self.__device.watch(Inputs.START_BUTTON, self.__button_interrupt)
+            self.__device.watch(Inputs.STOP_BUTTON, self.__button_interrupt)
 
-                self.__device.watch(
-                    Inputs.PHOTOELECTRIC_SENSOR_1, self.__sensor_interrupt
-                )
-                self.__device.watch(
-                    Inputs.PHOTOELECTRIC_SENSOR_2, self.__sensor_interrupt
-                )
+            self.__device.watch(
+                Inputs.PHOTOELECTRIC_SENSOR_1, self.__sensor_interrupt
+            )
+            self.__device.watch(
+                Inputs.PHOTOELECTRIC_SENSOR_2, self.__sensor_interrupt
+            )
 
         if self.debug:
             self.logger.info(
-                f'use {"Dummy" if self.is_dummy else "Arduino"} Controller'
+                f'use {"Dummy" if self.is_dummy else f"Arduino ({self.port})"} Controller'
             )
 
-    def __detect_serial(self, port):
+    def __get_candidate_ports(self, port) -> list:
         if isinstance(port, str):
-            return port
+            return [port]
 
         if not isinstance(port, int):
             raise RuntimeError(f"Invalid port argument type: {port} - {type(port)}")
 
         if platform in {"win32", "cygwin"}:
-            return f"COM{port}"
+            return [f"COM{port}"] if port != -1 else [f"COM{i}" for i in range(1, 10)]
 
         if not platform.startswith("linux"):
             raise RuntimeError("Not supported OS")
 
         if port == -1:
-            for path in listdir("/dev"):
-                if path.startswith("ttyACM"):
-                    return f"/dev/{path}"
+            candidates = []
+            try:
+                import os
+                raw_list = sorted([p for p in listdir("/dev") if p.startswith("ttyACM") or p.startswith("ttyUSB")])
+                for p in raw_list:
+                    dev_path = f"/dev/{p}"
+                    # Prioritize readable and writable devices
+                    if os.access(dev_path, os.R_OK | os.W_OK):
+                        candidates.append(dev_path)
+                # If no accessible devices found by os.access, append all raw candidates as fallback
+                if not candidates:
+                    candidates = [f"/dev/{p}" for p in raw_list]
+            except Exception:
+                pass
+            return candidates
         else:
-            return f"/dev/ttyACM{port}"
-
-        return None
+            return [f"/dev/ttyACM{port}"]
 
     def __del__(self):
         self.close()
@@ -141,14 +164,15 @@ class FactoryController:
                 pin, FactoryController.DEV_ON if on else FactoryController.DEV_OFF
             )
 
-    def __actuator(self, actuator_id):
+    def __actuator(self, actuator_id, duration: Optional[float] = None):
+        d = duration if duration is not None else self.pulse_duration
         if self.__device_name == "arduino":
             self.__set(actuator_id, FactoryController.DEV_ON)
-            sleep(0.1)
+            sleep(d)
             self.__set(actuator_id, FactoryController.DEV_OFF)
         elif self.__device_name == "ft232":
             self.__set(PyFt232.PKT_CMD_DETECTION, actuator_id)
-            sleep(0.5)
+            sleep(d * 5)
             self.__set(PyFt232.PKT_CMD_DETECTION, PyFt232.PKT_CMD_DETECTION_0)
 
     @debounce(0.1)
@@ -181,7 +205,7 @@ class FactoryController:
 
     @property
     def red(self):
-        return bool(self.__get(Outputs.BEACON_RED))
+        return self.__get(Outputs.BEACON_RED) == FactoryController.DEV_ON
 
     @red.setter
     def red(self, on):
@@ -189,7 +213,7 @@ class FactoryController:
 
     @property
     def orange(self):
-        return bool(self.__get(Outputs.BEACON_ORANGE))
+        return self.__get(Outputs.BEACON_ORANGE) == FactoryController.DEV_ON
 
     @orange.setter
     def orange(self, on):
@@ -197,7 +221,7 @@ class FactoryController:
 
     @property
     def green(self):
-        return bool(self.__get(Outputs.BEACON_GREEN))
+        return self.__get(Outputs.BEACON_GREEN) == FactoryController.DEV_ON
 
     @green.setter
     def green(self, on):
@@ -205,25 +229,71 @@ class FactoryController:
 
     @property
     def conveyor(self):
-        return bool(self.__get(Outputs.CONVEYOR_EN))
+        return self.__get(Outputs.CONVEYOR_EN) == FactoryController.DEV_ON
 
     @conveyor.setter
     def conveyor(self, on):
         if on:
             self.__set(Outputs.CONVEYOR_EN, FactoryController.DEV_ON)
-            self.__set(Outputs.CONVEYOR_PWM, 255)
+            speed = getattr(self, "_current_speed_pwm", 255)
+            self.__set(Outputs.CONVEYOR_PWM, speed)
         else:
             self.__set(Outputs.CONVEYOR_PWM, 0)
             self.__set(Outputs.CONVEYOR_EN, FactoryController.DEV_OFF)
 
+    @property
+    def conveyor_speed(self) -> int:
+        """컨베이어 PWM 속도 (0~255)."""
+        return getattr(self, "_current_speed_pwm", 255)
+
+    @conveyor_speed.setter
+    def conveyor_speed(self, pwm_val: int):
+        """컨베이어 PWM 속도 조절 (0~255)."""
+        val = max(0, min(255, int(pwm_val)))
+        self._current_speed_pwm = val
+        if not self.is_dummy:
+            self.__set(Outputs.CONVEYOR_PWM, val)
+        if self.debug and hasattr(self, "logger"):
+            self.logger.info(f"Conveyor Speed set to {val} PWM ({val*100//255}%)")
+
+    def set_conveyor_speed(self, speed_pwm: int) -> None:
+        """컨베이어 속도 조절 헬퍼."""
+        self.conveyor_speed = speed_pwm
+
+    def conveyor_stop(self) -> None:
+        """컨베이어 일시 정지 (PWM 0 및 EN OFF)."""
+        self.conveyor = False
+
+    def conveyor_start(self, speed: Optional[int] = None) -> None:
+        """컨베이어 가동 (속도 지정 가능)."""
+        if speed is not None:
+            self._current_speed_pwm = max(0, min(255, int(speed)))
+        self.conveyor = True
+
+    def manual_kick(self, kicker_num: int) -> None:
+        """수동 키커 배출 테스트 트리거."""
+        self.push_actuator(kicker_num)
+
+    @property
+    def is_running(self) -> bool:
+        """공정 작동 중 여부."""
+        return self.green and self.conveyor
+
     def push_actuator(self, num):
+        if self.reverse_actuator:
+            # 반전: 1차 검사(비전) -> ACTUATOR_2, 2차 검사(뎁스) -> ACTUATOR_1
+            act_id = Outputs.ACTUATOR_2 if num == 1 else Outputs.ACTUATOR_1
+        else:
+            act_id = Outputs.ACTUATOR_1 if num == 1 else Outputs.ACTUATOR_2
+
         if self.__device_name == "arduino":
-            if num == 1:
-                self.__actuator(Outputs.ACTUATOR_1)
-            else:
-                self.__actuator(Outputs.ACTUATOR_2)
+            self.__actuator(act_id)
         elif self.__device_name == "ft232":
-            self.__actuator(num)
+            mapped_num = (
+                2 if (self.reverse_actuator and num == 1)
+                else (1 if (self.reverse_actuator and num == 2) else num)
+            )
+            self.__actuator(mapped_num)
 
     ###########################################################################
     # Public methods

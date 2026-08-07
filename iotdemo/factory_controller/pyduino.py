@@ -39,32 +39,41 @@ class PyDuino:
         self.__force_stop = False
         self.__watcher = {}
         self.__values = [1] * 14  # Pin status
-        for idx in (0, 1):
-            self.__values[idx] = 0xFF  # NC
+        if not port:
+            raise ValueError("Serial port must be specified")
 
-        # init arduio
+        # init arduino
         arduino = Serial(port=port, baudrate=baudrate, timeout=1)
+        # Pulse DTR to ensure clean Arduino reset and synchronization
+        try:
+            arduino.dtr = False
+            import time
+            time.sleep(0.05)
+            arduino.dtr = True
+            time.sleep(0.2)
+        except Exception:
+            pass
         arduino.reset_input_buffer()
         arduino.reset_output_buffer()
         self.__arduino = arduino
-
-        self.__init_cv = Condition()
-        self.__init_input_pins = (10, 11, 12, 13)
-        self.__init_count = 0
-
-        self.__rx = Thread(target=self.__receiver)
-        self.__rx.name = "Arduino Rx"
-        self.__rx.start()
-
-        self.__init()
 
         self.__tx_lock = Lock()
         self.__tx_cv = Condition()
         self.__tx_queue = Queue()
         self.__tx_packet_id = 1
-        self.__tx = Thread(target=self.__transmitter)
+        self.__tx = Thread(target=self.__transmitter, daemon=True)
         self.__tx.name = "Arduino Tx"
         self.__tx.start()
+
+        self.__init_cv = Condition()
+        self.__init_input_pins = (10, 11, 12, 13)
+        self.__init_count = 0
+
+        self.__rx = Thread(target=self.__receiver, daemon=True)
+        self.__rx.name = "Arduino Rx"
+        self.__rx.start()
+
+        self.__init()
 
     def __del__(self):
         self.close()
@@ -74,12 +83,12 @@ class PyDuino:
 
         with self.__init_cv:
             self.__init_count += 1
-            if self.__init_count == len(self.__init_input_pins):
-                self.__init_cv.notify()
+            if self.__init_count >= len(self.__init_input_pins):
+                self.__init_cv.notify_all()
 
     def __init(self):
         with self.__init_cv:
-            self.__init_cv.wait()
+            self.__init_cv.wait(timeout=2.0)
 
         for idx in self.__init_input_pins:
             self.watch(idx)
@@ -170,20 +179,23 @@ class PyDuino:
         if self.__arduino is None:
             return
 
-        self.__stop_requested = True
-        if self.__force_stop:
-            return
-
-        # post end of tx marker
-        self.__tx_queue.put((None, None, None))
-        self.__tx.join()
-
-        # Stop Rx
         self.__force_stop = True
-        self.__rx.join()
+        self.__stop_requested = True
 
-        # close serial
-        self.__arduino.close()
+        with self.__tx_cv:
+            self.__tx_cv.notify_all()
+        with self.__init_cv:
+            self.__init_cv.notify_all()
+
+        try:
+            self.__tx_queue.put_nowait((None, None, None))
+        except Exception:
+            pass
+
+        try:
+            self.__arduino.close()
+        except Exception:
+            pass
 
         if self.debug:
             self.logger.info("stopped")
@@ -200,10 +212,10 @@ class PyDuino:
 
             with self.__tx_cv:
                 self.__tx_queue.put((pin, value, packet_id))
-                self.__tx_cv.wait()
+                self.__tx_cv.wait(timeout=0.2)
 
             self.__tx_packet_id += 1
-            if self.__tx_packet_id == PyDuino.PACKET_ID_MAX:
+            if self.__tx_packet_id >= PyDuino.PACKET_ID_MAX:
                 self.__tx_packet_id = 1
 
         return True

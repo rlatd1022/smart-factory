@@ -6,7 +6,8 @@ v4l2-ctl --device=/dev/video${CAMID} --set-ctrl=focus_auto=0
 v4l2-ctl --device=/dev/video${CAMID} --set-ctrl=focus_absolute=65
 
 v4l2-ctl --device=/dev/video${CAMID} --set-ctrl=exposure_auto=1
-v4l2-ctl --device=/dev/video${CAMID} --set-ctrl=exposure_absolute=128
+v4l2-ctl --device=/dev/video${CAMID} --set-ctrl=exposure_absolute=80
+v4l2-ctl --device=/dev/video${CAMID} --set-ctrl=brightness=70
 
 v4l2-ctl --device=/dev/video${CAMID} --set-ctrl=white_balance_temperature_auto=0
 v4l2-ctl --device=/dev/video${CAMID} --set-ctrl=white_balance_temperature=4000

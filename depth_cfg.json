@@ -1,0 +1,30 @@
+{
+  "depth_inspect": {
+    "use_center": true,
+    "uv": [
+      320,
+      240
+    ],
+    "ref_depth_mm": 388.0,
+    "tol_mm": 1.0,
+    "kicker_num": 2,
+    "min_samples": 3,
+    "idle_debounce_frames": 3,
+    "mask_radius_px": 12,
+    "min_mask_px": 20,
+    "depth_mask_erode_px": 5,
+    "depth_radius_px": 1,
+    "hsv_blue": [
+      [
+        94,
+        131,
+        53
+      ],
+      [
+        120,
+        255,
+        255
+      ]
+    ]
+  }
+}
