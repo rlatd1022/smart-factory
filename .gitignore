@@ -22,3 +22,47 @@ venv/
 
 # Runtime inspection export logs
 inspection_report_*.csv
+
+
+# UPLOAD_BACKUP_IGNORE
+.venv/
+.venv*/
+venv/
+.env/
+.vnev/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+node_modules/
+build/
+install/
+log/
+logs/
+.arduino-cli/
+outputs/
+output/
+captures/
+*.zip
+*.swp
+*.swo
+*~
+.DS_Store
+.cursor/
+*.engine
+*.bin
+*.mp4
+*.gif
+tools/bin/
+chroma.sqlite3
+MJDATA.TXT
+MJMODEL.TXT
+MUJOCO_LOG.TXT
+.train.py.swp
+canvases/
+*.AppImage
+*.onnx
+*.tflite
+*.task
